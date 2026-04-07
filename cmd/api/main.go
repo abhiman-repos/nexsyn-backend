@@ -2,10 +2,11 @@ package main
 
 import (
 	"log"
+	"os"
 
 	"nexsyn-backend/internal/database"
-	"nexsyn-backend/internal/server"
 	"nexsyn-backend/internal/routes"
+	"nexsyn-backend/internal/server"
 
 	"github.com/gofiber/fiber/v2/middleware/logger"
 )
@@ -30,8 +31,10 @@ func main() {
 	// ✅ CALL ROUTES HERE (IMPORTANT)
 	routes.RegisterFiberRoutes(s.App)
 
-	log.Println("🚀 Server running on http://localhost:8000")
-
-	log.Fatal(s.App.Listen(":8000"))
+	port := os.Getenv("PORT")
+	if port == "" {
+		port = "8000"
+	}
+	log.Fatal(s.App.Listen(":" + port))
 }
 
