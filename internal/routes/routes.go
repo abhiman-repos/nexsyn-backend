@@ -26,8 +26,8 @@ func RegisterFiberRoutes(app *fiber.App) {
 
 	// REVIEWS
 	reviews := api.Group("/reviews")
-	reviews.Get("/", handlers.GetReviews)
-	reviews.Post("/", handlers.CreateReview)
+	reviews.Get("/get", handlers.GetReviews)
+	reviews.Post("/post", handlers.CreateReview)
 
 	// USERS
 	users := api.Group("/users")
