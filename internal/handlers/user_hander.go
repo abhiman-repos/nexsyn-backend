@@ -85,7 +85,8 @@ func GoogleAuth(c *fiber.Ctx) error {
 		Name:     "token",
 		Value:    token,
 		HTTPOnly: true,
-		SameSite: "Lax",
+		Secure:   true, // 🔥 must be true in production
+		SameSite: "None",
 		Path:     "/",
 	})
 
@@ -181,8 +182,8 @@ func AuthUser(c *fiber.Ctx) error {
 		Name:     "token",
 		Value:    token,
 		HTTPOnly: true,
-		Secure:   false, // ⚠️ true in production (HTTPS)
-		SameSite: "Lax",
+		Secure:   true, // ⚠️ true in production (HTTPS)
+		SameSite: "None",
 		Path:     "/",
 	})
 
