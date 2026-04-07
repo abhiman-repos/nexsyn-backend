@@ -81,7 +81,27 @@ func CreateTables() error {
 	_, err := DB.Exec(context.Background(), query)
 	return err
 
-	
-	
+}
+
+func CreateReviewTable() error {
+	query := `
+	CREATE TABLE IF NOT EXISTS reviews (
+		id SERIAL PRIMARY KEY,
+		user_id TEXT NOT NULL,
+		title TEXT NOT NULL,
+		content TEXT NOT NULL,
+		rating INT CHECK (rating >= 1 AND rating <= 5),
+		created_at TIMESTAMP DEFAULT NOW(),
+
+		-- 🔗 Foreign key (IMPORTANT)
+		CONSTRAINT fk_user
+		FOREIGN KEY(user_id)
+		REFERENCES users(id)
+		ON DELETE CASCADE
+	);
+	`
+
+	_, err := DB.Exec(context.Background(), query)
+	return err
 }
 

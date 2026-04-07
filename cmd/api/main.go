@@ -24,6 +24,12 @@ func main() {
 		log.Println("✅ Tables created successfully")
 	}
 
+	if err := database.CreateReviewTable(); err != nil {
+		log.Fatal("Error creating review table:", err)
+	} else {
+		log.Println("✅ Review table created successfully")
+	}
+
 	s := server.New()
 
 	s.App.Use(logger.New())
