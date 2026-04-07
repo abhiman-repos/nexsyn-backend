@@ -11,7 +11,7 @@ import (
 func RegisterFiberRoutes(app *fiber.App) {
 
 	app.Use(cors.New(cors.Config{
-		AllowOrigins: "http://localhost:3000,https://nexsyn-backend.onrender.com",
+		AllowOrigins: "http://localhost:3000",
 		AllowMethods: "GET,POST,PUT,DELETE,OPTIONS,PATCH",
 		AllowHeaders: "Origin,Content-Type,Accept,Authorization",
 		AllowCredentials: true,
