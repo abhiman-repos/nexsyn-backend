@@ -7,6 +7,7 @@ import (
 	"log"
 	"os"
 	"strconv"
+	"strings"
 	"time"
 
 	_ "github.com/jackc/pgx/v5/stdlib"
@@ -39,18 +40,48 @@ var (
 )
 
 func New() Service {
-	// Reuse Connection
+	// Reuse connection
 	if dbInstance != nil {
 		return dbInstance
 	}
-	connStr := fmt.Sprintf("postgres://%s:%s@%s:%s/%s?sslmode=disable&search_path=%s", username, password, host, port, database, schema)
+
+	// 🔥 1. Try production DB first
+	connStr := os.Getenv("DATABASE_URL")
+
+	// 🔄 2. Fallback to local Docker (for development)
+	if connStr == "" {
+		connStr = fmt.Sprintf(
+			"postgres://%s:%s@%s:%s/%s?sslmode=disable&search_path=%s",
+			username,
+			password,
+			host,
+			port,
+			database,
+			schema,
+		)
+	} else {
+		// 🔥 3. Render requires SSL
+		if !strings.Contains(connStr, "sslmode") {
+			connStr += "?sslmode=require"
+		}
+	}
+
+	fmt.Println("Connecting to DB:", connStr) // debug
+
 	db, err := sql.Open("pgx", connStr)
 	if err != nil {
 		log.Fatal(err)
 	}
+
+	// 🔥 Important: verify connection
+	if err := db.Ping(); err != nil {
+		log.Fatal("DB connection failed:", err)
+	}
+
 	dbInstance = &service{
 		db: db,
 	}
+
 	return dbInstance
 }
 

@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"os"
+	"strings"
 	"time"
 
 	"github.com/jackc/pgx/v5/pgxpool"
@@ -12,28 +13,40 @@ import (
 var DB *pgxpool.Pool
 
 func ConnectDB() error {
-	dsn := fmt.Sprintf(
-		"postgres://%s:%s@%s:%s/%s?sslmode=disable",
-		os.Getenv("BLUEPRINT_DB_USERNAME"),
-		os.Getenv("BLUEPRINT_DB_PASSWORD"),
-		os.Getenv("BLUEPRINT_DB_HOST"),
-		os.Getenv("BLUEPRINT_DB_PORT"),
-		os.Getenv("BLUEPRINT_DB_DATABASE"),
-	)
+	// 🔥 1. Try production DB (Render)
+	dsn := os.Getenv("DATABASE_URL")
 
-	// ✅ Config with pool tuning
+	// 🔄 2. Fallback to local Docker (optional)
+	if dsn == "" {
+		dsn = fmt.Sprintf(
+			"postgres://%s:%s@%s:%s/%s?sslmode=disable",
+			os.Getenv("BLUEPRINT_DB_USERNAME"),
+			os.Getenv("BLUEPRINT_DB_PASSWORD"),
+			os.Getenv("BLUEPRINT_DB_HOST"),
+			os.Getenv("BLUEPRINT_DB_PORT"),
+			os.Getenv("BLUEPRINT_DB_DATABASE"),
+		)
+		fmt.Println("⚠️ Using LOCAL database")
+	} else {
+		// 🔥 Render requires SSL
+		if !strings.Contains(dsn, "sslmode") {
+			dsn += "?sslmode=require"
+		}
+		fmt.Println("🚀 Using RENDER database")
+	}
+
+	// ✅ Parse config
 	config, err := pgxpool.ParseConfig(dsn)
 	if err != nil {
 		return err
 	}
 
-	// 🔥 Pool settings (IMPORTANT)
+	// 🔥 Pool settings
 	config.MaxConns = 20
 	config.MinConns = 5
 	config.MaxConnLifetime = time.Hour
 	config.MaxConnIdleTime = 30 * time.Minute
 
-	// ✅ Timeout context
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
@@ -42,7 +55,6 @@ func ConnectDB() error {
 		return err
 	}
 
-	// ✅ Ping with timeout
 	if err := pool.Ping(ctx); err != nil {
 		return err
 	}
@@ -53,3 +65,23 @@ func ConnectDB() error {
 
 	return nil
 }
+
+func CreateTables() error {
+	query := `
+	CREATE TABLE IF NOT EXISTS users (
+		id TEXT PRIMARY KEY,
+		email TEXT UNIQUE NOT NULL,
+		password TEXT,
+		fullname TEXT,
+		provider TEXT,
+		created_at TIMESTAMP DEFAULT NOW()
+	);
+	`
+
+	_, err := DB.Exec(context.Background(), query)
+	return err
+
+	
+	
+}
+

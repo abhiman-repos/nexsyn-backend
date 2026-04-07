@@ -12,9 +12,15 @@ import (
 
 func main() {
 
-	err := database.ConnectDB()
-	if err != nil {
+	if err := database.ConnectDB(); err != nil {
+	
 		log.Fatal(err)
+	}
+
+	if err := database.CreateTables(); err != nil {
+		log.Fatal("Error creating tables:", err)
+	} else {
+		log.Println("✅ Tables created successfully")
 	}
 
 	s := server.New()
